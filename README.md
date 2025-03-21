@@ -1,4 +1,6 @@
 # SIMULATION AND IMPLEMENTATION OF MULTIPLEXER
+## Name: Sridhar G
+## 212223060271
 
 ## AIM
 To design and simulate a 4:1 Multiplexer (MUX) using Verilog HDL in four different modeling styles—Gate-Level, Data Flow, Behavioral, and Structural—and to verify its functionality through a testbench using the Vivado 2023.1 simulation environment. The experiment aims to understand how different abstraction levels in Verilog can be used to describe the same digital logic circuit and analyze their performance.
@@ -62,79 +64,75 @@ To design and simulate a 4:1 Multiplexer (MUX) using Verilog HDL in four differe
 
 ### 4:1 MUX Gate-Level Implementation
 ```verilog
-module mux4_to_1_gate (
-    input wire A,
-    input wire B,
-    input wire C,
-    input wire D,
-    input wire S0,
-    input wire S1,
-    output wire Y
-);
-    wire not_S0, not_S1;
-    wire A_and, B_and, C_and, D_and;
-
-    not (not_S0, S0);
-    not (not_S1, S1);
-
-    and (A_and, A, not_S1, not_S0);
-    and (B_and, B, not_S1, S0);
-    and (C_and, C, S1, not_S0);
-    and (D_and, D, S1, S0);
-
-    or (Y, A_and, B_and, C_and, D_and);
+module mux41(s,a,b,c,d,y);
+input [0:1]s;
+input a,b,c,d;
+output y;
+wire [0:5]w;
+not g1(w[0],s[0]);
+not g2(w[1],s[1]);
+and g3(w[2],w[0],w[1],a);
+and g4(w[3],w[0],s[1],b);
+and g5(w[4],s[0],w[1],c);
+and g6(w[5],s[0],s[1],d);
+or o1(y,w[2],w[3],w[4],w[5]);
 endmodule
+![WhatsApp Image 2025-03-15 at 17 25 02_6a8ab26e](https://github.com/user-attachments/assets/e81824be-b428-45c3-8918-ea5a31891070)
+
 ```
 ## Simulated Output Gate Level Modelling
 
-_______ Here Paste the Simulated output  ___________
+![WhatsApp Image 2025-03-15 at 17 25 02_d9bed6be](https://github.com/user-attachments/assets/ebcd17c1-1363-41da-8d16-46bae3b7b9d2)
+
 
 ### 4:1 MUX Data Flow Implementation
 ```verilog
-module mux4_to_1_dataflow (
-    input wire A,
-    input wire B,
-    input wire C,
-    input wire D,
-    input wire S0,
-    input wire S1,
-    output wire Y
-);
-    assign Y = (~S1 & ~S0 & A) |
-               (~S1 & S0 & B) |
-               (S1 & ~S0 & C) |
-               (S1 & S0 & D);
+module dataflow_mux(s,a,b,c,d,y);
+input [0:1]s;
+input a,b,c,d;
+output y;
+wire [0:3]w;
+assign w[0]=~s[0]&~s[1]&a;
+assign w[1]=~s[0]&s[1]&b;
+assign w[2]=~s[1]&s[0]&c;
+assign w[3]=s[0]&s[1]&d;
+assign y=w[1]|w[2]|w[3]|w[0];
 endmodule
+
 ```
 ## Simulated Output Data Flow Modelling
 
-_______ Here Paste the Simulated output  ___________
+![WhatsApp Image 2025-03-15 at 17 15 48_11b3bd7f](https://github.com/user-attachments/assets/6309f06d-b3a5-4db8-94d5-a72b7439b03e)
+
 
 ### 4:1 MUX Behavioral Implementation
 ```verilog
-module mux4_to_1_behavioral (
-    input wire A,
-    input wire B,
-    input wire C,
-    input wire D,
-    input wire S0,
-    input wire S1,
-    output reg Y
+module behi_mux(
+    input wire [1:0] sel,   
+    input wire [3:0] d,     
+    output reg y           
 );
-    always @(*) begin
-        case ({S1, S0})
-            2'b00: Y = A;
-            2'b01: Y = B;
-            2'b10: Y = C;
-            2'b11: Y = D;
-            default: Y = 1'bx;
-        endcase
-    end
+
+always @(*) begin
+    if (sel == 2'b00)
+        y = d[0];
+    else if (sel == 2'b01)
+        y = d[1];
+    else if (sel == 2'b10)
+        y = d[2];
+    else if (sel == 2'b11)
+        y = d[3];
+    else
+        y = 1'b0; 
+end
+
 endmodule
+
 ```
 ## Simulated Output Behavioral Modelling
 
-_______ Here Paste the Simulated output  ___________
+![WhatsApp Image 2025-03-15 at 17 09 03_df5afcba](https://github.com/user-attachments/assets/41f6e556-abee-4e62-a048-5ebbbb6ca51b)
+
 
 
 ### 4:1 MUX Structural Implementation
@@ -143,35 +141,30 @@ _______ Here Paste the Simulated output  ___________
 
 
 ```verilog
-module mux2_to_1 (
-    input wire A,
-    input wire B,
-    input wire S,
-    output wire Y
+module mux2_to1 (
+    input a,b,
+    input s,
+    output y
 );
-    assign Y = S ? B : A;
+    assign y = s?b:a;
 endmodule
 
-module mux4_to_1_structural (
-    input wire A,
-    input wire B,
-    input wire C,
-    input wire D,
-    input wire S0,
-    input wire S1,
-    output wire Y
-);
-    wire mux_low, mux_high;
+module mux_struct(a,b,c,d,s,y);
+input a,b,c,d;
+input [1:0]s;
+wire [1:0]w;
+output y;
+mux2_to1 mux0(a,b,s[0],w[0]);
+mux2_to1 mux1(c,d,s[0],w[1]);
+mux2_to1 mux2(w[0],w[1],s[1],y);
 
-    mux2_to_1 mux0 (.A(A), .B(B), .S(S0), .Y(mux_low));
-    mux2_to_1 mux1 (.A(C), .B(D), .S(S0), .Y(mux_high));
-
-    mux2_to_1 mux_final (.A(mux_low), .B(mux_high), .S(S1), .Y(Y));
 endmodule
+
 ```
 ## Simulated Output Structural Modelling
+![WhatsApp Image 2025-03-16 at 14 36 03_8c1bf5cc](https://github.com/user-attachments/assets/e7385df9-002c-4644-a593-ec089c8e0e00)
 
-_______ Here Paste the Simulated output  ___________
+
 
 ### Testbench Implementation
 ```verilog
